@@ -1,14 +1,24 @@
 import Redis from 'ioredis';
 import { env } from './env';
 
-const redis = new Redis(env.REDIS_URL);
+let redis: Redis;
 
-redis.on('connect', () => {
-  console.log('✅ Redis connected');
-});
+try {
+  redis = new Redis(env.REDIS_URL, {
+    lazyConnect: true,
+    enableOfflineQueue: false,
+    retryStrategy: () => null,
+  });
 
-redis.on('error', (error) => {
-  console.error('❌ Redis connection error:', error);
-});
+  redis.on('connect', () => {
+    console.log('✅ Redis connected');
+  });
 
-export default redis;
+  redis.on('error', (error) => {
+    console.error('⚠️ Redis not available:', error.message);
+  });
+} catch (error) {
+  console.error('⚠️ Redis initialization failed');
+}
+
+export default redis!;
